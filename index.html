@@ -1855,5 +1855,137 @@ body{background-image:radial-gradient(120% 60% at 50% -10%,rgba(var(--acRGB),.16
 })();
 
 </script>
-</body>
+<script>
+(function () {
+  'use strict';
+
+  /* Camadas que o voltar deve fechar, da mais alta para a mais baixa. */
+  var CAMADAS = ['leitura', 'editor', 'folha'];
+
+  var pilha = [];          // o que o voltar tem para desfazer
+  var ignorar = 0;         // popstates que nós mesmos provocamos
+  var voltando = false;    // estamos no meio de um voltar?
+  var avisoSaida = 0;      // quando pedimos confirmação para sair
+  var vistaAtual = null;
+
+  function empilha(item) {
+    pilha.push(item);
+    try { history.pushState({ planejar: pilha.length }, ''); } catch (e) { }
+  }
+
+  /* A camada foi fechada pelo ✕ ou pelo toque fora: some com a entrada
+     correspondente para o voltar não precisar de dois toques. */
+  function retira(tipo, id) {
+    for (var i = pilha.length - 1; i >= 0; i--) {
+      if (pilha[i].tipo === tipo && pilha[i].id === id) {
+        pilha.splice(i, 1);
+        ignorar++;
+        try { history.back(); } catch (e) { ignorar--; }
+        return;
+      }
+    }
+  }
+
+  function guarda() {
+    try { history.pushState({ planejar: 0 }, ''); } catch (e) { }
+  }
+
+  /* ---- camadas sobrepostas ---- */
+
+  function fechaCamada(id) {
+    var alvo;
+    if (id === 'editor') alvo = document.querySelector('#ed-fechar');
+    else if (id === 'leitura') alvo = document.querySelector('#sair-leitura');
+    else alvo = document.querySelector('#folha [data-fechar]');
+
+    if (alvo) { alvo.click(); return; }
+
+    // Rede de segurança, caso o botão de fechar não esteja na tela.
+    var el = document.getElementById(id);
+    if (el) el.classList.remove('open');
+    if (!document.querySelector('#folha.open, #editor.open, #leitura.open')) {
+      document.body.classList.remove('travado');
+    }
+  }
+
+  function vigia(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var aberto = el.classList.contains('open');
+    new MutationObserver(function () {
+      var agora = el.classList.contains('open');
+      if (agora === aberto) return;
+      aberto = agora;
+      if (agora) empilha({ tipo: 'camada', id: id });
+      else retira('camada', id);
+    }).observe(el, { attributes: true, attributeFilter: ['class'] });
+  }
+
+  CAMADAS.forEach(vigia);
+
+  /* ---- troca de aba ---- */
+
+  function vistaDaNav() {
+    var b = document.querySelector('.nav button.on');
+    return b ? b.dataset.vista : null;
+  }
+
+  var nav = document.getElementById('nav');
+  if (nav) {
+    vistaAtual = vistaDaNav();
+    new MutationObserver(function () {
+      var nova = vistaDaNav();
+      if (!nova || nova === vistaAtual) return;
+      var de = vistaAtual;
+      vistaAtual = nova;
+      if (!voltando && de) empilha({ tipo: 'vista', de: de });
+    }).observe(nav, { subtree: true, childList: true, attributes: true, attributeFilter: ['class'] });
+  }
+
+  function vaiPara(v) {
+    voltando = true;
+    if (window.Planejar && window.Planejar.ir) window.Planejar.ir(v);
+    setTimeout(function () { voltando = false; }, 0);
+  }
+
+  /* ---- o voltar em si ---- */
+
+  function fimDaPilha() {
+    // Numa aba interna, voltar leva para o início.
+    if (vistaAtual && vistaAtual !== 'inicio') {
+      guarda();
+      vaiPara('inicio');
+      return;
+    }
+    // No início, pede confirmação antes de sair.
+    if (Date.now() - avisoSaida < 2500) {
+      try { history.back(); } catch (e) { }
+      return;
+    }
+    avisoSaida = Date.now();
+    if (window.Planejar && window.Planejar.aviso) {
+      window.Planejar.aviso('Toque em voltar de novo para sair.');
+    }
+    guarda();
+  }
+
+  window.addEventListener('popstate', function () {
+    if (ignorar > 0) { ignorar--; return; }
+
+    var item = pilha.pop();
+    if (!item) { fimDaPilha(); return; }
+
+    if (item.tipo === 'camada') fechaCamada(item.id);
+    else vaiPara(item.de);
+  });
+
+  /* Uma entrada de reserva, para o primeiro voltar chegar até nós
+     em vez de fechar o app na hora. */
+  function liga() {
+    vistaAtual = vistaDaNav() || vistaAtual;
+    guarda();
+  }
+  if (document.readyState === 'complete') setTimeout(liga, 0);
+  else window.addEventListener('load', function () { set
+    </body>
 </html>
