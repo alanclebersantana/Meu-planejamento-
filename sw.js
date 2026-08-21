@@ -1,14 +1,20 @@
 /* Planejar — service worker
    Troque a versão sempre que publicar uma alteração: isso avisa o app
    e limpa o cache antigo automaticamente. */
-const VERSAO = 'planejar-v1.0.0';
+const VERSAO = 'planejar-v1.0.1';
 const CASCA = VERSAO + '-casca';
 const EXTERNO = VERSAO + '-externo';
 
-const ARQUIVOS = [
+/* Sem estes o app não abre offline. Se um falhar, a instalação falha
+   mesmo — e aí é bug de verdade, tem que aparecer. */
+const ESSENCIAIS = [
   './',
   './index.html',
-  './manifest.json',
+  './manifest.json'
+];
+
+/* Bom ter, mas um 404 aqui não pode derrubar o service worker inteiro. */
+const OPCIONAIS = [
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/icon-maskable-192.png',
@@ -25,10 +31,22 @@ const DOMINIOS_EXTERNOS = [
   'cdnjs.cloudflare.com'
 ];
 
+/* Guarda um arquivo sem deixar o erro subir. Avisa no console para
+   você conseguir enxergar o que ficou faltando. */
+function guardarSemQuebrar(cache, caminho) {
+  return cache.add(new Request(caminho, { cache: 'reload' }))
+    .catch(err => {
+      console.warn('[sw] não consegui guardar:', caminho, err);
+    });
+}
+
 self.addEventListener('install', ev => {
   ev.waitUntil(
     caches.open(CASCA)
-      .then(c => c.addAll(ARQUIVOS))
+      .then(c =>
+        c.addAll(ESSENCIAIS)
+          .then(() => Promise.all(OPCIONAIS.map(a => guardarSemQuebrar(c, a))))
+      )
       .then(() => self.skipWaiting())
   );
 });
