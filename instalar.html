@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Instalar o Planejar</title>
+<meta name="description" content="Coloque o Planejar na tela inicial do seu celular. Funciona sem internet.">
+<meta name="theme-color" content="#F1F4EE">
+
+<!-- Essencial: é este link que faz o Chrome oferecer a instalação nesta página. -->
+<link rel="manifest" href="manifest.json">
+
+<!-- Usados pelo iPhone quando alguém adiciona à tela de início. -->
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="Planejar">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+/* ===== mesmos tokens do app, paleta verde ===== */
+html{
+  --acRGB:38,146,98;
+  --ac:rgb(var(--acRGB));
+  --ac2:rgba(var(--acRGB),.12);
+  --ac-forte:#1D6C48;
+  --ac-ink:#fff;
+
+  --bg:#F1F4EE;
+  --surf:#FFFFFF;
+  --surf2:#E8EDE4;
+  --ink:#1B241F;
+  --ink2:#5E6B62;
+  --linha:#D9E1D6;
+  --linha-forte:#BECAB9;
+  --perigo:#C4553F;
+
+  --ff:'Nunito',system-ui,sans-serif;
+  --fd:'Caveat',cursive;
+  --fu:'Nunito',system-ui,sans-serif;
+
+  --r:18px;
+  --r2:12px;
+  --r-ico:12px;
+  --borda:1px solid var(--linha);
+  --borda-fina:1px solid var(--linha);
+  --borda-tracejada:1px dashed var(--linha-forte);
+  --sombra:0 2px 10px rgba(27,36,31,.05);
+  --sombra-alta:0 8px 22px rgba(27,36,31,.12);
+  --btn-sombra:0 2px 8px rgba(var(--acRGB),.35);
+  --hover:rgba(27,36,31,.05);
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--ff);
+  font-size:1rem;line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+button{cursor:pointer;border:0;background:none;font:inherit;color:inherit}
+h1,h2,h3{margin:0;font-family:var(--fd);font-weight:700;line-height:1.15}
+p{margin:0}
+:focus-visible{outline:2.5px solid var(--ac);outline-offset:2px;border-radius:6px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.app{min-height:100vh;display:flex;flex-direction:column}
+
+/* ---- topo, igual ao do app ---- */
+.topo{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;
+  gap:12px;padding:calc(10px + env(safe-area-inset-top)) 16px 10px;background:var(--bg)}
+.marca{display:flex;align-items:center;gap:10px;min-width:0}
+.marca-ico{width:34px;height:34px;border-radius:var(--r-ico);overflow:hidden;flex:none;
+  box-shadow:var(--sombra)}
+.marca-ico img{width:100%;height:100%;object-fit:cover;display:block}
+.marca-txt{display:flex;flex-direction:column;line-height:1.1;min-width:0}
+.marca-txt b{font-family:var(--fd);font-size:1.06rem;letter-spacing:.01em}
+.marca-txt small{font-size:.68rem;opacity:.7;font-family:var(--fu);letter-spacing:.08em;text-transform:uppercase}
+.selo-topo{font-family:var(--fu);font-size:.62rem;text-transform:uppercase;letter-spacing:.06em;
+  padding:4px 10px;border-radius:999px;background:var(--ac2);color:var(--ac-forte);font-weight:700}
+
+.vista{flex:1;padding:14px 16px 28px;max-width:560px;width:100%;margin:0 auto}
+
+/* ---- abertura ---- */
+.eyebrow{font-family:var(--fu);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;opacity:.55}
+.saudacao{margin-bottom:22px}
+.saudacao h1{font-size:clamp(2.1rem,8.5vw,2.6rem);margin:6px 0 8px;letter-spacing:.005em}
+.saudacao .sub{font-size:.95rem;opacity:.75}
+
+/* ---- KPI, igual ao do app ---- */
+.grade-kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px}
+.kpi{padding:13px 8px;border-radius:var(--r);background:var(--surf);border:var(--borda);
+  text-align:center;box-shadow:var(--sombra)}
+.kpi b{display:block;font-family:var(--fd);font-size:1.5rem;color:var(--ac-forte);line-height:1}
+.kpi span{display:block;margin-top:5px;font-size:.66rem;opacity:.6;font-family:var(--fu);line-height:1.25}
+@media (max-width:400px){.grade-kpi{grid-template-columns:repeat(2,1fr)}}
+
+/* ---- botões ---- */
+.btn{display:block;width:100%;text-align:center;padding:14px 18px;border-radius:var(--r2);
+  background:var(--ac);color:var(--ac-ink);font-weight:700;font-size:.98rem;text-decoration:none;
+  box-shadow:var(--btn-sombra);transition:transform .12s ease,filter .12s}
+.btn:hover{filter:brightness(1.06)}
+.btn:active{transform:translateY(1px)}
+.btn[disabled]{opacity:.45;cursor:default;box-shadow:none}
+.btn.ghost{background:var(--surf);color:var(--ink);border:var(--borda);box-shadow:none;margin-top:9px}
+.btn.ghost:hover{background:var(--surf2);filter:none}
+
+/* ---- aviso, igual ao do app ---- */
+.aviso{display:none;align-items:center;gap:12px;padding:13px 15px;border-radius:var(--r);
+  background:var(--ac2);color:var(--ac-forte);margin-bottom:16px;font-size:.86rem;line-height:1.45}
+.aviso.mostrar{display:flex}
+.aviso.atencao{background:rgba(196,85,63,.11);color:var(--perigo)}
+.aviso b{font-weight:800}
+.aviso .marca-ponto{flex:none;width:8px;height:8px;border-radius:50%;background:currentColor;opacity:.6}
+
+/* ---- passos como cartões do app ---- */
+.grupo{font-family:var(--fu);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;
+  opacity:.5;margin:26px 0 9px}
+.cartao{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:var(--r);
+  background:var(--surf);border:var(--borda);box-shadow:var(--sombra);margin-bottom:9px}
+.data-bloco{flex:none;width:44px;text-align:center;padding:5px 0;border-radius:var(--r2);
+  background:var(--ac2);color:var(--ac-forte)}
+.data-bloco b{display:block;font-family:var(--fd);font-size:1.35rem;line-height:1}
+.data-bloco span{font-family:var(--fu);font-size:.58rem;text-transform:uppercase;opacity:.75}
+.cartao-txt{flex:1;min-width:0;font-size:.93rem}
+.cartao-txt b{font-weight:800}
+.tecla{display:inline-block;padding:1px 8px;border-radius:7px;background:var(--surf2);
+  border:var(--borda);font-size:.88rem;line-height:1.5}
+
+.nota{padding:14px 16px;border-radius:var(--r);background:var(--surf2);
+  border:var(--borda-tracejada);font-size:.86rem;line-height:1.5;opacity:.85}
+.nota b{font-weight:800;opacity:1}
+
+.painel{display:none}
+.painel.ativo{display:block}
+
+/* ---- chips de aparelho ---- */
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.chip{padding:8px 15px;border-radius:999px;background:var(--surf2);border:var(--borda);
+  font-size:.8rem;font-family:var(--fu);font-weight:600}
+.chip[aria-pressed="true"]{background:var(--ac);color:var(--ac-ink);border-color:transparent}
+
+.credito{margin-top:28px;text-align:center;font-size:.72rem;opacity:.45;font-family:var(--fu)}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <header class="topo">
+    <div class="marca">
+      <div class="marca-ico"><img src="icons/icon-512.png" alt=""></div>
+      <div class="marca-txt">
+        <b>Planejar</b>
+        <small>planejamento escolar</small>
+      </div>
+    </div>
+    <span class="selo-topo">Grátis</span>
+  </header>
+
+  <main class="vista">
+
+    <div class="saudacao">
+      <p class="eyebrow">Instalação</p>
+      <h1>Seus planos de aula, sempre à mão</h1>
+      <p class="sub">Instale o Planejar na tela inicial e abra num toque — com ou sem internet.</p>
+    </div>
+
+    <div class="grade-kpi">
+      <div class="kpi"><b>20s</b><span>para instalar</span></div>
+      <div class="kpi"><b>&lt;1MB</b><span>de espaço</span></div>
+      <div class="kpi"><b>0</b><span>anúncios</span></div>
+      <div class="kpi"><b>∞</b><span>sem internet</span></div>
+    </div>
+
+    <div class="aviso" id="aviso">
+      <span class="marca-ponto" aria-hidden="true"></span>
+      <span id="avisoTexto"></span>
+    </div>
+
+    <!-- Android -->
+    <section class="painel" id="painel-android" aria-label="Instalação no Android">
+      <button class="btn" id="botaoInstalar" disabled>Instalar o Planejar</button>
+      <a class="btn ghost" href="./">Abrir sem instalar</a>
+
+      <p class="grupo">Se o botão não funcionar</p>
+      <div class="cartao">
+        <div class="data-bloco"><b>1</b><span>passo</span></div>
+        <p class="cartao-txt">Toque nos <span class="tecla">⋮</span> três pontinhos, no topo do Chrome.</p>
+      </div>
+      <div class="cartao">
+        <div class="data-bloco"><b>2</b><span>passo</span></div>
+        <p class="cartao-txt">Escolha <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>.</p>
+      </div>
+      <div class="cartao">
+        <div class="data-bloco"><b>3</b><span>passo</span></div>
+        <p class="cartao-txt">Confirme. O ícone aparece junto dos seus outros apps.</p>
+      </div>
+    </section>
+
+    <!-- iPhone -->
+    <section class="painel" id="painel-ios" aria-label="Instalação no iPhone">
+      <a class="btn" href="./">Abrir o Planejar</a>
+
+      <p class="grupo">Depois, no Safari</p>
+      <div class="cartao">
+        <div class="data-bloco"><b>1</b><span>passo</span></div>
+        <p class="cartao-txt">Toque em <span class="tecla">⬆︎</span> Compartilhar, na barra de baixo.</p>
+      </div>
+      <div class="cartao">
+        <div class="data-bloco"><b>2</b><span>passo</span></div>
+        <p class="cartao-txt">Role a lista e escolha <b>Adicionar à Tela de Início</b>.</p>
+      </div>
+      <div class="cartao">
+        <div class="data-bloco"><b>3</b><span>passo</span></div>
+        <p class="cartao-txt">Toque em <b>Adicionar</b>, no canto direito.</p>
+      </div>
+
+      <p class="grupo">Duas coisas</p>
+      <p class="nota">
+        Faça isso <b>com o app aberto</b>, não nesta página — o iPhone salva a página que estiver na tela.
+        E só funciona pelo <b>Safari</b>.
+      </p>
+    </section>
+
+    <!-- Computador -->
+    <section class="painel" id="painel-desktop" aria-label="Instalação no computador">
+      <button class="btn" id="botaoInstalarPc" disabled>Instalar o Planejar</button>
+      <a class="btn ghost" href="./">Abrir sem instalar</a>
+
+      <p class="grupo">Se o botão não funcionar</p>
+      <div class="cartao">
+        <div class="data-bloco"><b>1</b><span>passo</span></div>
+        <p class="cartao-txt">Procure o <span class="tecla">⊕</span> na barra de endereço.</p>
+      </div>
+      <div class="cartao">
+        <div class="data-bloco"><b>2</b><span>passo</span></div>
+        <p class="cartao-txt">Clique nele e confirme <b>Instalar</b>.</p>
+      </div>
+      <div class="cartao">
+        <div class="data-bloco"><b>3</b><span>passo</span></div>
+        <p class="cartao-txt">O Planejar passa a abrir em janela própria.</p>
+      </div>
+    </section>
+
+    <p class="grupo">Outro aparelho</p>
+    <div class="chips" id="chips">
+      <button class="chip" data-alvo="android" aria-pressed="false">Android</button>
+      <button class="chip" data-alvo="ios" aria-pressed="false">iPhone</button>
+      <button class="chip" data-alvo="desktop" aria-pressed="false">Computador</button>
+    </div>
+
+    <p class="credito">Planejar · feito por Alan Correa</p>
+
+  </main>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  var ua = navigator.userAgent || '';
+  var ehIOS = /iPhone|iPad|iPod/.test(ua) ||
+              (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  var ehAndroid = /Android/.test(ua);
+  var promptGuardado = null;
+
+  var aviso = document.getElementById('aviso');
+  var avisoTexto = document.getElementById('avisoTexto');
+  var chips = document.getElementById('chips');
+  var botoes = [
+    document.getElementById('botaoInstalar'),
+    document.getElementById('botaoInstalarPc')
+  ];
+
+  function dizer(texto, tipo){
+    avisoTexto.innerHTML = texto;
+    aviso.classList.add('mostrar');
+    aviso.classList.toggle('atencao', tipo === 'atencao');
+  }
+
+  function mostrarPainel(alvo){
+    ['android','ios','desktop'].forEach(function(nome){
+      document.getElementById('painel-' + nome)
+        .classList.toggle('ativo', nome === alvo);
+    });
+    chips.querySelectorAll('.chip').forEach(function(c){
+      c.setAttribute('aria-pressed', String(c.dataset.alvo === alvo));
+    });
+  }
+
+  mostrarPainel(ehIOS ? 'ios' : (ehAndroid ? 'android' : 'desktop'));
+
+  chips.querySelectorAll('.chip').forEach(function(c){
+    c.addEventListener('click', function(){ mostrarPainel(c.dataset.alvo); });
+  });
+
+  // Já instalado?
+  var jaInstalado = window.matchMedia('(display-mode: standalone)').matches ||
+                    window.navigator.standalone === true;
+  if (jaInstalado){
+    dizer('<b>Já está instalado.</b> Procure o ícone do Planejar na sua tela inicial.');
+    botoes.forEach(function(b){ if (b) b.style.display = 'none'; });
+    return;
+  }
+
+  // Navegador de dentro do WhatsApp, Instagram e afins não instala nada
+  var navegadorDeApp = /(FBAN|FBAV|Instagram|Line\/|MicroMessenger|WhatsApp)/.test(ua) ||
+                       (ehAndroid && /; wv\)/.test(ua));
+  if (navegadorDeApp){
+    dizer('Você abriu o link de dentro de outro app, e aqui a instalação não aparece. ' +
+          'Toque nos <b>⋮</b> e escolha <b>Abrir no navegador</b>.', 'atencao');
+  }
+
+  window.addEventListener('beforeinstallprompt', function(e){
+    e.preventDefault();
+    promptGuardado = e;
+    botoes.forEach(function(b){ if (b) b.disabled = false; });
+    aviso.classList.remove('mostrar');
+  });
+
+  function instalar(){
+    if (!promptGuardado) return;
+    promptGuardado.prompt();
+    promptGuardado.userChoice.then(function(r){
+      if (r && r.outcome === 'dismissed'){
+        dizer('Instalação cancelada. Toque no botão de novo quando quiser.');
+      }
+    }).catch(function(){}).then(function(){
+      promptGuardado = null;
+      botoes.forEach(function(b){ if (b) b.disabled = true; });
+    });
+  }
+  botoes.forEach(function(b){ if (b) b.addEventListener('click', instalar); });
+
+  window.addEventListener('appinstalled', function(){
+    dizer('<b>Pronto, instalado.</b> O ícone do Planejar já está na sua tela.');
+    botoes.forEach(function(b){ if (b) b.style.display = 'none'; });
+  });
+
+  // Se em 3,5s o convite não veio, o botão vira caminho manual em vez de ficar morto
+  if (!ehIOS){
+    setTimeout(function(){
+      if (promptGuardado) return;
+      botoes.forEach(function(b){
+        if (!b || b.style.display === 'none') return;
+        b.disabled = false;
+        b.textContent = 'Ver como instalar na mão';
+        b.addEventListener('click', function(ev){
+          ev.preventDefault();
+          document.querySelector('.painel.ativo .grupo')
+            .scrollIntoView({ behavior:'smooth', block:'center' });
+        });
+      });
+      if (!navegadorDeApp){
+        dizer('Seu navegador não ofereceu a instalação automática. Os passos abaixo resolvem.');
+      }
+    }, 3500);
+  }
+})();
+</script>
+
+</body>
+</html>
