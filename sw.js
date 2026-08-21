@@ -1,7 +1,7 @@
 /* Planejar — service worker
    Troque a versão sempre que publicar uma alteração: isso avisa o app
    e limpa o cache antigo automaticamente. */
-const VERSAO = 'planejar-v1.0.1';
+const VERSAO = 'planejar-v1.0.2';
 const CASCA = VERSAO + '-casca';
 const EXTERNO = VERSAO + '-externo';
 
